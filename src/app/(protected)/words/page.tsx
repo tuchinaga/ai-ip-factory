@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Category, WordItem } from "@/lib/types";
+import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
 
 export default function WordsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -15,6 +16,7 @@ export default function WordsPage() {
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
   const [aiError, setAiError] = useState<string | null>(null);
   const [addingSuggestions, setAddingSuggestions] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/words");
@@ -24,6 +26,7 @@ export default function WordsPage() {
     if (!activeCat && data.categories?.length) {
       setActiveCat(data.categories[0].id);
     }
+    setInitialLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -197,8 +200,9 @@ export default function WordsPage() {
           <button
             onClick={handleGenerateSuggestions}
             disabled={generating || !activeCat}
-            className="btn-secondary text-xs px-3 py-1.5"
+            className="btn-secondary text-xs px-3 py-1.5 inline-flex items-center gap-1.5"
           >
+            {generating && <Spinner className="w-3.5 h-3.5" />}
             {generating ? "生成中..." : "10件生成する"}
           </button>
         </div>
@@ -223,8 +227,9 @@ export default function WordsPage() {
             <button
               onClick={handleAddSuggestions}
               disabled={addingSuggestions || selectedSuggestions.size === 0}
-              className="btn-primary text-xs px-4 py-2"
+              className="btn-primary text-xs px-4 py-2 inline-flex items-center gap-1.5"
             >
+              {addingSuggestions && <Spinner className="w-3.5 h-3.5" />}
               {addingSuggestions
                 ? "追加中..."
                 : `選択した${selectedSuggestions.size}件を追加`}
@@ -233,35 +238,39 @@ export default function WordsPage() {
         )}
       </div>
 
-      <div className="space-y-2">
-        {activeWords.map((w) => (
-          <div
-            key={w.id}
-            className="flex items-center justify-between card px-4 py-2.5"
-          >
-            <span className={w.enabled ? "" : "line-through text-ink/30"}>
-              {w.word}
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleToggle(w)}
-                className="text-xs text-ink/40 hover:text-ink/70"
-              >
-                {w.enabled ? "無効化" : "有効化"}
-              </button>
-              <button
-                onClick={() => handleDelete(w)}
-                className="text-xs text-red-400 hover:text-red-600"
-              >
-                削除
-              </button>
+      {initialLoading ? (
+        <LoadingBlock label="単語を読み込み中" />
+      ) : (
+        <div className="space-y-2">
+          {activeWords.map((w) => (
+            <div
+              key={w.id}
+              className="flex items-center justify-between card px-4 py-2.5"
+            >
+              <span className={w.enabled ? "" : "line-through text-ink/30"}>
+                {w.word}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleToggle(w)}
+                  className="text-xs text-ink/40 hover:text-ink/70"
+                >
+                  {w.enabled ? "無効化" : "有効化"}
+                </button>
+                <button
+                  onClick={() => handleDelete(w)}
+                  className="text-xs text-red-400 hover:text-red-600"
+                >
+                  削除
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-        {activeWords.length === 0 && (
-          <p className="text-sm text-ink/30">単語がありません。</p>
-        )}
-      </div>
+          ))}
+          {activeWords.length === 0 && (
+            <p className="text-sm text-ink/30">単語がありません。</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

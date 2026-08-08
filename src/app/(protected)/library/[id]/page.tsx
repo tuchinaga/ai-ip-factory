@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CharacterSeed, SeedStatus, VISUAL_STYLES, VisualStyle } from "@/lib/types";
+import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
 
 const TEXT_FIELDS: { key: keyof CharacterSeed; label: string; multiline?: boolean }[] = [
   { key: "name", label: "名前" },
@@ -212,7 +213,11 @@ export default function SeedDetailPage() {
   }
 
   if (!seed) {
-    return <div className="max-w-4xl mx-auto px-6 py-12 text-ink/40">読み込み中...</div>;
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <LoadingBlock label="読み込み中" />
+      </div>
+    );
   }
 
   return (
@@ -248,6 +253,7 @@ export default function SeedDetailPage() {
             disabled={deleting}
             className="text-xs font-semibold rounded-full px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 transition ml-2"
           >
+            {deleting && <Spinner className="w-3.5 h-3.5 inline-block mr-1 align-[-2px]" />}
             {deleting ? "削除中..." : "削除"}
           </button>
         </div>
@@ -315,8 +321,9 @@ export default function SeedDetailPage() {
             <button
               onClick={handleGeneratePrompt}
               disabled={generatingPrompt}
-              className="btn-primary w-full mb-3"
+              className="btn-primary w-full mb-3 inline-flex items-center justify-center gap-2"
             >
+              {generatingPrompt && <Spinner className="w-4 h-4" />}
               {generatingPrompt ? "生成中..." : "VISUAL PROMPTを生成"}
             </button>
             {seed.visual_prompt && (
@@ -375,8 +382,9 @@ export default function SeedDetailPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="btn-secondary w-full"
+              className="btn-secondary w-full inline-flex items-center justify-center gap-2"
             >
+              {uploading && <Spinner className="w-4 h-4" />}
               {uploading ? "アップロード中..." : "+ 画像をアップロード"}
             </button>
           </div>
@@ -401,7 +409,12 @@ export default function SeedDetailPage() {
                 </button>
               ))}
             </div>
-            <button onClick={handleMutate} disabled={mutating} className="btn-primary w-full">
+            <button
+              onClick={handleMutate}
+              disabled={mutating}
+              className="btn-primary w-full inline-flex items-center justify-center gap-2"
+            >
+              {mutating && <Spinner className="w-4 h-4" />}
               {mutating ? "生成中..." : "MUTATE"}
             </button>
 

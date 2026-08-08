@@ -10,6 +10,7 @@ import {
   WordItem,
 } from "@/lib/types";
 import { NameStyle } from "@/lib/ai/prompts";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
   const [nameStyle, setNameStyle] = useState<NameStyle>("international");
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/words")
@@ -32,7 +34,8 @@ export default function CreatePage() {
       .then((data) => {
         setCategories(data.categories ?? []);
         setWords(data.words ?? []);
-      });
+      })
+      .finally(() => setInitialLoading(false));
   }, []);
 
   async function handleShuffle() {
@@ -122,36 +125,49 @@ export default function CreatePage() {
         GENERATE CONCEPTSでAIが3案生成 → 気に入った案をSELECTで保存できます。
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {categories.map((cat) => (
-          <div key={cat.id} className="card p-5 flex flex-col items-center gap-3">
-            <span className="label">{cat.label}</span>
-            <span className="text-xl font-semibold text-center min-h-[1.75rem]">
-              {selection[cat.key] || "—"}
-            </span>
-            <button
-              onClick={() =>
-                setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
-              }
-              className={`text-xs rounded-full px-3 py-1 border transition ${
-                locked[cat.key]
-                  ? "bg-ink text-paper border-ink"
-                  : "border-ink/20 text-ink/50 hover:border-ink/40"
-              }`}
-              disabled={!selection[cat.key]}
-            >
-              {locked[cat.key] ? "🔒 ロック中" : "ロック"}
-            </button>
-          </div>
-        ))}
-      </div>
+      {initialLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="card p-5 flex flex-col items-center gap-3 animate-pulse">
+              <div className="h-3 w-16 bg-ink/10 rounded" />
+              <div className="h-6 w-20 bg-ink/10 rounded" />
+              <div className="h-6 w-16 bg-ink/10 rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {categories.map((cat) => (
+            <div key={cat.id} className="card p-5 flex flex-col items-center gap-3">
+              <span className="label">{cat.label}</span>
+              <span className="text-xl font-semibold text-center min-h-[1.75rem]">
+                {selection[cat.key] || "—"}
+              </span>
+              <button
+                onClick={() =>
+                  setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
+                }
+                className={`text-xs rounded-full px-3 py-1 border transition ${
+                  locked[cat.key]
+                    ? "bg-ink text-paper border-ink"
+                    : "border-ink/20 text-ink/50 hover:border-ink/40"
+                }`}
+                disabled={!selection[cat.key]}
+              >
+                {locked[cat.key] ? "🔒 ロック中" : "ロック"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex justify-center mb-10">
         <button
           onClick={handleShuffle}
-          disabled={loadingShuffle}
-          className="btn-accent"
+          disabled={loadingShuffle || initialLoading}
+          className="btn-accent inline-flex items-center gap-2"
         >
+          {loadingShuffle && <Spinner className="w-4 h-4" />}
           {loadingShuffle ? "シャッフル中..." : "SHUFFLE"}
         </button>
       </div>
@@ -185,8 +201,9 @@ export default function CreatePage() {
           <button
             onClick={handleGenerateConcepts}
             disabled={loadingConcepts}
-            className="btn-primary"
+            className="btn-primary inline-flex items-center gap-2"
           >
+            {loadingConcepts && <Spinner className="w-4 h-4" />}
             {loadingConcepts ? "生成中..." : "コンセプトを生成"}
           </button>
         </div>
@@ -220,8 +237,9 @@ export default function CreatePage() {
               <button
                 onClick={() => handleSelect(c, i)}
                 disabled={savingIndex !== null}
-                className="btn-secondary mt-auto"
+                className="btn-secondary mt-auto inline-flex items-center justify-center gap-2"
               >
+                {savingIndex === i && <Spinner className="w-3.5 h-3.5" />}
                 {savingIndex === i ? "保存中..." : "選択"}
               </button>
             </div>

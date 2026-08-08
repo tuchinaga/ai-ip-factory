@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Spinner } from "@/components/ui/Spinner";
 
 function LoginForm() {
   const router = useRouter();
@@ -47,7 +48,8 @@ function LoginForm() {
         />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" disabled={loading} className="btn-primary w-full">
+      <button type="submit" disabled={loading} className="btn-primary w-full inline-flex items-center justify-center gap-2">
+        {loading && <Spinner className="w-4 h-4" />}
         {loading ? "確認中..." : "ログイン"}
       </button>
     </form>

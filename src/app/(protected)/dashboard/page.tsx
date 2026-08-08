@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CharacterSeed } from "@/lib/types";
+import { LoadingBlock } from "@/components/ui/Spinner";
 
 interface DashboardData {
   totalCombinations: number;
@@ -26,7 +27,11 @@ export default function DashboardPage() {
   }, []);
 
   if (!data) {
-    return <div className="max-w-5xl mx-auto px-6 py-12 text-ink/40">読み込み中...</div>;
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <LoadingBlock label="ダッシュボードを読み込み中" />
+      </div>
+    );
   }
 
   const progress = Math.min(100, (data.characterSeeds / GOAL) * 100);
