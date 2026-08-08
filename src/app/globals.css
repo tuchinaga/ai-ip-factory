@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Helvetica Neue", Arial, "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+body {
+  background-color: #FAFAF8;
+  color: #111111;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-ink text-paper px-6 py-3 font-medium tracking-wide transition hover:opacity-85 active:scale-[0.98];
+  }
+  .btn-accent {
+    @apply inline-flex items-center justify-center rounded-full bg-accent text-white px-8 py-4 text-lg font-semibold tracking-wide transition hover:opacity-90 active:scale-[0.98] shadow-lg shadow-accent/20;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-ink/15 px-5 py-2.5 text-sm font-medium transition hover:bg-ink/5;
+  }
+  .card {
+    @apply rounded-2xl border border-ink/10 bg-white;
+  }
+  .input {
+    @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-accent transition;
+  }
+  .label {
+    @apply text-xs font-semibold tracking-widest text-ink/50 uppercase;
+  }
+}
