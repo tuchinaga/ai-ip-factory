@@ -5,6 +5,12 @@ import Link from "next/link";
 import { CharacterSeed, SeedStatus } from "@/lib/types";
 
 const FILTERS: (SeedStatus | "ALL")[] = ["ALL", "KEEP", "MAYBE", "KILL"];
+const FILTER_LABELS: Record<SeedStatus | "ALL", string> = {
+  ALL: "すべて",
+  KEEP: "KEEP",
+  MAYBE: "MAYBE",
+  KILL: "KILL",
+};
 
 export default function LibraryPage() {
   const [seeds, setSeeds] = useState<CharacterSeed[]>([]);
@@ -28,17 +34,31 @@ export default function LibraryPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  async function handleDelete(e: React.MouseEvent, seed: CharacterSeed) {
+    e.preventDefault();
+    e.stopPropagation();
+    const ok = window.confirm(
+      `「${seed.name || "無題"}」を削除します。この操作は取り消せません。よろしいですか？`
+    );
+    if (!ok) return;
+    await fetch(`/api/seeds/${seed.id}`, { method: "DELETE" });
+    setSeeds((prev) => prev.filter((s) => s.id !== seed.id));
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <h1 className="text-3xl font-semibold tracking-tight">ライブラリ</h1>
         <input
           className="input max-w-xs"
-          placeholder="Search name / theme / trait / motif / memo"
+          placeholder="名前・テーマ・性格・モチーフ・メモで検索"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
+      <p className="text-xs text-ink/40 bg-ink/5 rounded-xl px-4 py-3 mb-8 leading-relaxed">
+        💡 カードをクリックすると詳細編集画面へ移動します。カードにカーソルを合わせると削除ボタンが表示されます。
+      </p>
 
       <div className="flex gap-2 mb-8">
         {FILTERS.map((f) => (
@@ -51,7 +71,7 @@ export default function LibraryPage() {
                 : "border-ink/20 text-ink/50 hover:border-ink/40"
             }`}
           >
-            {f}
+            {FILTER_LABELS[f]}
           </button>
         ))}
       </div>
@@ -73,8 +93,14 @@ export default function LibraryPage() {
               <Link
                 key={seed.id}
                 href={`/library/${seed.id}`}
-                className="card overflow-hidden group"
+                className="card overflow-hidden group relative"
               >
+                <button
+                  onClick={(e) => handleDelete(e, seed)}
+                  className="absolute top-2 right-2 z-10 text-[10px] font-semibold rounded-full px-2 py-1 bg-white/90 text-red-500 opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-50"
+                >
+                  削除
+                </button>
                 <div className="aspect-square bg-ink/5 flex items-center justify-center overflow-hidden">
                   {main ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -84,7 +110,7 @@ export default function LibraryPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition"
                     />
                   ) : (
-                    <span className="text-ink/20 text-xs">No Image</span>
+                    <span className="text-ink/20 text-xs">画像なし</span>
                   )}
                 </div>
                 <div className="p-3">

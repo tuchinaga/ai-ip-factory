@@ -3,7 +3,7 @@ import { COOKIE_NAME, verifySessionToken } from "@/lib/auth/session";
 
 const PUBLIC_PATHS = ["/login", "/robots.txt", "/api/auth/login"];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isPublic =
@@ -16,7 +16,7 @@ export function middleware(req: NextRequest) {
   }
 
   const token = req.cookies.get(COOKIE_NAME)?.value;
-  const isAuthed = verifySessionToken(token);
+  const isAuthed = await verifySessionToken(token);
 
   if (!isAuthed) {
     if (pathname.startsWith("/api/")) {

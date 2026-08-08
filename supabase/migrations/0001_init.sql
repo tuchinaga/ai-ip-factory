@@ -97,7 +97,7 @@ create trigger trg_seeds_updated_at before update on character_seeds
 
 -- 初期カテゴリ
 insert into categories (key, label, sort_order) values
-  ('theme', 'THEME', 1),
-  ('trait', 'TRAIT', 2),
-  ('motif', 'MOTIF', 3)
+  ('theme', 'テーマ', 1),
+  ('trait', '性格', 2),
+  ('motif', 'モチーフ', 3)
 on conflict (key) do nothing;

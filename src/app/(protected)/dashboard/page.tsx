@@ -26,15 +26,15 @@ export default function DashboardPage() {
   }, []);
 
   if (!data) {
-    return <div className="max-w-5xl mx-auto px-6 py-12 text-ink/40">Loading...</div>;
+    return <div className="max-w-5xl mx-auto px-6 py-12 text-ink/40">読み込み中...</div>;
   }
 
   const progress = Math.min(100, (data.characterSeeds / GOAL) * 100);
 
   const stats = [
-    { label: "TOTAL COMBINATIONS", value: data.totalCombinations },
-    { label: "CONCEPTS GENERATED", value: data.conceptsGenerated },
-    { label: "CHARACTER SEEDS", value: data.characterSeeds },
+    { label: "総組み合わせ数", value: data.totalCombinations },
+    { label: "生成コンセプト数", value: data.conceptsGenerated },
+    { label: "Character Seed数", value: data.characterSeeds },
     { label: "KEEP", value: data.keep },
     { label: "MAYBE", value: data.maybe },
     { label: "KILL", value: data.kill },
@@ -42,7 +42,10 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight mb-8">Dashboard</h1>
+      <h1 className="text-3xl font-semibold tracking-tight mb-4">ダッシュボード</h1>
+      <p className="text-xs text-ink/40 bg-ink/5 rounded-xl px-4 py-3 mb-8 leading-relaxed">
+        💡 これまでに生成・保存したCharacter Seedの状況を一覧できます。1000 SEEDSの目標に対する進捗もここで確認できます。
+      </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
         {stats.map((s) => (
@@ -55,7 +58,7 @@ export default function DashboardPage() {
 
       <div className="card p-6 mb-10">
         <div className="flex items-center justify-between mb-2">
-          <span className="label">1000 SEEDS GOAL</span>
+          <span className="label">1000 SEEDS 目標</span>
           <span className="text-sm font-medium">
             {data.characterSeeds} / {GOAL} SEEDS
           </span>
@@ -68,7 +71,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <h2 className="text-lg font-semibold mb-4">Recently Created</h2>
+      <h2 className="text-lg font-semibold mb-4">最近作成したCharacter</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {data.recent.map((seed) => {
           const main = seed.images?.find((i) => i.is_main) ?? seed.images?.[0];
@@ -79,7 +82,7 @@ export default function DashboardPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={main.image_url} alt={seed.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-ink/20 text-[10px]">No Image</span>
+                  <span className="text-ink/20 text-[10px]">画像なし</span>
                 )}
               </div>
               <div className="p-2 text-xs font-medium truncate">{seed.name || "無題"}</div>

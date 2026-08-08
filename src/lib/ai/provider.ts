@@ -4,6 +4,7 @@ import {
   conceptGenerationPrompt,
   visualPromptGenerationPrompt,
   mutationGenerationPrompt,
+  wordGenerationPrompt,
 } from "@/lib/ai/prompts";
 
 // AI Provider抽象化レイヤー。
@@ -45,4 +46,21 @@ export async function generateMutationCombinations(params: {
   });
   const raw = await callClaude(prompt);
   return parseJsonFromModelOutput<SelectionMap[]>(raw);
+}
+
+export async function generateWords(params: {
+  categoryLabel: string;
+  existingWords: string[];
+  count?: number;
+}): Promise<string[]> {
+  const prompt = wordGenerationPrompt({
+    categoryLabel: params.categoryLabel,
+    existingWords: params.existingWords,
+    count: params.count ?? 10,
+  });
+  const raw = await callClaude(prompt);
+  const words = parseJsonFromModelOutput<string[]>(raw);
+  const existingSet = new Set(params.existingWords);
+  // 念のためAI側で重複が混じっていた場合に備え、既存単語を除外
+  return words.filter((w) => w && !existingSet.has(w));
 }

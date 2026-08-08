@@ -6,14 +6,14 @@ import Link from "next/link";
 import { CharacterSeed, SeedStatus, VISUAL_STYLES, VisualStyle } from "@/lib/types";
 
 const TEXT_FIELDS: { key: keyof CharacterSeed; label: string; multiline?: boolean }[] = [
-  { key: "name", label: "Name" },
-  { key: "concept", label: "One Line Concept", multiline: true },
-  { key: "personality", label: "Personality", multiline: true },
-  { key: "world", label: "World", multiline: true },
-  { key: "philosophy", label: "Philosophy / Message", multiline: true },
-  { key: "story_seed", label: "Story Seed", multiline: true },
-  { key: "visual_keywords", label: "Visual Keywords", multiline: true },
-  { key: "memo", label: "Memo", multiline: true },
+  { key: "name", label: "名前" },
+  { key: "concept", label: "一言コンセプト", multiline: true },
+  { key: "personality", label: "性格", multiline: true },
+  { key: "world", label: "世界観", multiline: true },
+  { key: "philosophy", label: "哲学・メッセージ", multiline: true },
+  { key: "story_seed", label: "ストーリーの種", multiline: true },
+  { key: "visual_keywords", label: "ビジュアルキーワード", multiline: true },
+  { key: "memo", label: "メモ", multiline: true },
 ];
 
 export default function SeedDetailPage() {
@@ -32,6 +32,7 @@ export default function SeedDetailPage() {
   const [lockedKeys, setLockedKeys] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/seeds/${id}`);
@@ -192,21 +193,39 @@ export default function SeedDetailPage() {
     router.push(`/library/${createData.seed.id}`);
   }
 
+  async function handleDeleteSeed() {
+    const ok = window.confirm(
+      `「${seed?.name || "無題"}」を削除します。この操作は取り消せません。よろしいですか？`
+    );
+    if (!ok) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/seeds/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      router.push("/library");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "削除に失敗しました");
+      setDeleting(false);
+    }
+  }
+
   if (!seed) {
-    return <div className="max-w-4xl mx-auto px-6 py-12 text-ink/40">Loading...</div>;
+    return <div className="max-w-4xl mx-auto px-6 py-12 text-ink/40">読み込み中...</div>;
   }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
       <Link href="/library" className="text-sm text-ink/40 hover:text-ink/70">
-        ← Library
+        ← ライブラリ
       </Link>
 
       <div className="flex items-center justify-between mt-4 mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">
           {draft.name || "無題"}
         </h1>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {(["KEEP", "MAYBE", "KILL"] as SeedStatus[]).map((s) => (
             <button
               key={s}
@@ -224,6 +243,13 @@ export default function SeedDetailPage() {
               {s}
             </button>
           ))}
+          <button
+            onClick={handleDeleteSeed}
+            disabled={deleting}
+            className="text-xs font-semibold rounded-full px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 transition ml-2"
+          >
+            {deleting ? "削除中..." : "削除"}
+          </button>
         </div>
       </div>
 
@@ -233,13 +259,16 @@ export default function SeedDetailPage() {
         {/* 左: テキスト情報編集 */}
         <div className="space-y-5">
           <div>
-            <span className="label">Source Words</span>
+            <span className="label">生成元の単語</span>
             <p className="text-sm mt-1">
               {Object.entries(seed.source_words || {})
                 .map(([k, v]) => `${k}: ${v}`)
                 .join(" / ")}
             </p>
           </div>
+          <p className="text-xs text-ink/40 bg-ink/5 rounded-xl px-4 py-3 leading-relaxed">
+            💡 各項目は入力欄からフォーカスが外れると自動的に保存されます。右側のパネルでVisual Prompt生成・画像アップロード・MUTATE（要素を固定した派生生成）ができます。
+          </p>
 
           {TEXT_FIELDS.map((f) => (
             <div key={String(f.key)}>
@@ -265,13 +294,13 @@ export default function SeedDetailPage() {
               )}
             </div>
           ))}
-          {saving && <p className="text-xs text-ink/30">Saving...</p>}
+          {saving && <p className="text-xs text-ink/30">保存中...</p>}
         </div>
 
         {/* 右: Visual Prompt / 画像 / Mutation */}
         <div className="space-y-8">
           <div className="card p-5">
-            <span className="label mb-3 block">Visual Prompt</span>
+            <span className="label mb-3 block">Visual Prompt(画像生成プロンプト)</span>
             <select
               className="input mb-3"
               value={style}
@@ -288,7 +317,7 @@ export default function SeedDetailPage() {
               disabled={generatingPrompt}
               className="btn-primary w-full mb-3"
             >
-              {generatingPrompt ? "GENERATING..." : "GENERATE VISUAL PROMPT"}
+              {generatingPrompt ? "生成中..." : "VISUAL PROMPTを生成"}
             </button>
             {seed.visual_prompt && (
               <div>
@@ -298,14 +327,14 @@ export default function SeedDetailPage() {
                   value={seed.visual_prompt}
                 />
                 <button onClick={handleCopyPrompt} className="btn-secondary w-full mt-2">
-                  {copied ? "COPIED!" : "COPY PROMPT"}
+                  {copied ? "コピーしました" : "プロンプトをコピー"}
                 </button>
               </div>
             )}
           </div>
 
           <div className="card p-5">
-            <span className="label mb-3 block">Character Images</span>
+            <span className="label mb-3 block">キャラクター画像</span>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {seed.images?.map((img) => (
                 <div key={img.id} className="relative group">
@@ -323,14 +352,14 @@ export default function SeedDetailPage() {
                         onClick={() => handleSetMain(img.id)}
                         className="text-[10px] text-white underline"
                       >
-                        Set Main
+                        メインに設定
                       </button>
                     )}
                     <button
                       onClick={() => handleDeleteImage(img.id)}
                       className="text-[10px] text-white/80 underline"
                     >
-                      Delete
+                      削除
                     </button>
                   </div>
                 </div>
@@ -348,14 +377,14 @@ export default function SeedDetailPage() {
               disabled={uploading}
               className="btn-secondary w-full"
             >
-              {uploading ? "UPLOADING..." : "+ Upload Image"}
+              {uploading ? "アップロード中..." : "+ 画像をアップロード"}
             </button>
           </div>
 
           <div className="card p-5">
-            <span className="label mb-3 block">Mutate</span>
+            <span className="label mb-3 block">Mutate(派生生成)</span>
             <p className="text-xs text-ink/50 mb-3">
-              固定したい要素をLOCKしてからMUTATEすると、残りの要素だけ変化した新しい組み合わせを提案します。
+              固定したい要素をロックしてからMUTATEすると、残りの要素だけ変化した新しい組み合わせを提案します。
             </p>
             <div className="flex flex-wrap gap-2 mb-3">
               {Object.entries(seed.source_words || {}).map(([key, value]) => (
@@ -373,7 +402,7 @@ export default function SeedDetailPage() {
               ))}
             </div>
             <button onClick={handleMutate} disabled={mutating} className="btn-primary w-full">
-              {mutating ? "MUTATING..." : "MUTATE"}
+              {mutating ? "生成中..." : "MUTATE"}
             </button>
 
             {mutationOptions && (
@@ -388,7 +417,7 @@ export default function SeedDetailPage() {
                       onClick={() => handleCreateFromMutation(opt)}
                       className="text-xs underline text-accent"
                     >
-                      Create Seed
+                      Seedを作成
                     </button>
                   </div>
                 ))}

@@ -45,6 +45,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ category: data });
   }
 
+  if (body.words && Array.isArray(body.words)) {
+    // 一括追加(AI提案からの選択追加など)
+    const rows = body.words.map((w: string) => ({ category_id: body.category_id, word: w }));
+    const { data, error } = await supabase
+      .from("words")
+      .upsert(rows, { onConflict: "category_id,word", ignoreDuplicates: true })
+      .select();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ words: data });
+  }
+
   const { category_id, word } = body;
   if (!category_id || !word) {
     return NextResponse.json({ error: "category_id と word は必須です" }, { status: 400 });

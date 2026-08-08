@@ -109,3 +109,28 @@ ${poolText}
 ]
 `.trim();
 }
+
+export function wordGenerationPrompt(params: {
+  categoryLabel: string;
+  existingWords: string[];
+  count: number;
+}): string {
+  const { categoryLabel, existingWords, count } = params;
+
+  return `
+あなたはキャラクターIP開発のクリエイティブディレクターです。
+「${categoryLabel}」カテゴリーに追加する新しい単語を${count}個考えてください。
+
+# 既存の単語(重複させないこと)
+${existingWords.join(", ") || "(まだ登録されていません)"}
+
+# 方針
+- 1〜4文字程度の短い日本語の単語・熟語にする(説明文にしない)
+- 既存の単語と系統は合わせつつ、意外性のある新しい単語も混ぜる
+- キャラクター/IP開発のランダム掛け合わせに使うため、抽象的すぎず具体的すぎない言葉にする
+
+# 出力形式
+以下のJSON配列のみを出力してください(説明文・コードブロック記法は不要)。
+["単語1", "単語2", ...]
+`.trim();
+}

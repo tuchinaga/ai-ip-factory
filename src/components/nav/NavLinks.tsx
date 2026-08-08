@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const ITEMS = [
-  { href: "/create", label: "Create" },
-  { href: "/library", label: "Library" },
-  { href: "/words", label: "Words" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/create", label: "作成" },
+  { href: "/library", label: "ライブラリ" },
+  { href: "/words", label: "単語" },
+  { href: "/dashboard", label: "ダッシュボード" },
 ];
 
 export function SidebarNav() {
@@ -46,7 +46,7 @@ export function SidebarNav() {
         onClick={handleLogout}
         className="mt-auto text-xs text-ink/40 hover:text-ink/70 text-left"
       >
-        Log out
+        ログアウト
       </button>
     </aside>
   );

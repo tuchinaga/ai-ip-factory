@@ -36,7 +36,7 @@ function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="card p-6 space-y-4">
       <div>
-        <label className="label mb-1 block">Password</label>
+        <label className="label mb-1 block">パスワード</label>
         <input
           type="password"
           className="input"
@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div className="mb-10 text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-ink" />
           <h1 className="text-2xl font-semibold tracking-tight">AI IP Factory</h1>
-          <p className="mt-1 text-sm text-ink/50">Internal access only</p>
+          <p className="mt-1 text-sm text-ink/50">社内利用専用</p>
         </div>
         <Suspense fallback={null}>
           <LoginForm />

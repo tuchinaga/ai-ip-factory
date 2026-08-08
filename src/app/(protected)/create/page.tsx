@@ -111,9 +111,13 @@ export default function CreatePage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight mb-1">Create</h1>
-      <p className="text-ink/50 mb-10">
+      <h1 className="text-3xl font-semibold tracking-tight mb-1">作成</h1>
+      <p className="text-ink/50 mb-4">
         ランダムな組み合わせから、キャラクター/IPの原石を発見する
+      </p>
+      <p className="text-xs text-ink/40 bg-ink/5 rounded-xl px-4 py-3 mb-10 leading-relaxed">
+        💡 SHUFFLEでランダムに単語を表示 → 気に入った単語はLOCKして固定 →
+        GENERATE CONCEPTSでAIが3案生成 → 気に入った案をSELECTで保存できます。
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -134,7 +138,7 @@ export default function CreatePage() {
               }`}
               disabled={!selection[cat.key]}
             >
-              {locked[cat.key] ? "🔒 LOCKED" : "LOCK"}
+              {locked[cat.key] ? "🔒 ロック中" : "ロック"}
             </button>
           </div>
         ))}
@@ -146,7 +150,7 @@ export default function CreatePage() {
           disabled={loadingShuffle}
           className="btn-accent"
         >
-          {loadingShuffle ? "SHUFFLING..." : "SHUFFLE"}
+          {loadingShuffle ? "シャッフル中..." : "SHUFFLE"}
         </button>
       </div>
 
@@ -161,7 +165,7 @@ export default function CreatePage() {
             disabled={loadingConcepts}
             className="btn-primary"
           >
-            {loadingConcepts ? "GENERATING..." : "GENERATE CONCEPTS"}
+            {loadingConcepts ? "生成中..." : "コンセプトを生成"}
           </button>
         </div>
       )}
@@ -187,16 +191,16 @@ export default function CreatePage() {
               <h3 className="text-lg font-semibold mb-2">{c.name}</h3>
               <p className="text-sm mb-3">{c.concept}</p>
               <dl className="text-xs text-ink/60 space-y-1 mb-4">
-                <div><span className="font-medium text-ink/80">Personality: </span>{c.personality}</div>
-                <div><span className="font-medium text-ink/80">World: </span>{c.world}</div>
-                <div><span className="font-medium text-ink/80">Philosophy: </span>{c.philosophy}</div>
+                <div><span className="font-medium text-ink/80">性格: </span>{c.personality}</div>
+                <div><span className="font-medium text-ink/80">世界観: </span>{c.world}</div>
+                <div><span className="font-medium text-ink/80">哲学: </span>{c.philosophy}</div>
               </dl>
               <button
                 onClick={() => handleSelect(c, i)}
                 disabled={savingIndex !== null}
                 className="btn-secondary mt-auto"
               >
-                {savingIndex === i ? "SAVING..." : "SELECT"}
+                {savingIndex === i ? "保存中..." : "選択"}
               </button>
             </div>
           ))}
