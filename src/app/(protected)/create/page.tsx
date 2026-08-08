@@ -112,7 +112,10 @@ export default function CreatePage() {
     }
   }
 
-  const hasSelection = categories.every((c) => !!selection[c.key]);
+  const hasSelection =
+    !initialLoading &&
+    categories.length > 0 &&
+    categories.every((c) => !!selection[c.key]);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
