@@ -1,15 +1,26 @@
 import { SelectionMap, VisualStyle } from "@/lib/types";
 
+export type NameStyle = "international" | "japanese";
+
 const PHILOSOPHY = `
 キャラクターを説明過多にしすぎないこと。世界観や設定を作り込みすぎず、
 人間が想像を追加できる余白を残すこと。以下を重視する:
 ・シンプル ・一言で説明できる ・感情移入できる ・世界展開しやすい
 ・視覚的特徴を作りやすい ・哲学やテーマが奥に存在する
 ・子どもにも理解できるが、大人にも意味がある
-キャラクター名は短く、国際的に発音しやすい候補を優先する。
 `.trim();
 
-export function conceptGenerationPrompt(selection: SelectionMap): string {
+const NAME_POLICY: Record<NameStyle, string> = {
+  international:
+    "キャラクター名は短く、国際的に発音しやすいアルファベット表記の候補を優先する。",
+  japanese:
+    "キャラクター名は短い日本語の名前(ひらがな・カタカナ・漢字いずれか)にする。海外向けの発音しやすさは優先しない。",
+};
+
+export function conceptGenerationPrompt(
+  selection: SelectionMap,
+  nameStyle: NameStyle = "international"
+): string {
   const words = Object.entries(selection)
     .map(([key, word]) => `${key}: ${word}`)
     .join(" / ");
@@ -23,6 +34,7 @@ ${words}
 
 # 生成方針
 ${PHILOSOPHY}
+${NAME_POLICY[nameStyle]}
 
 # 出力形式
 以下のJSON配列のみを出力してください（説明文・コードブロック記法は不要）。

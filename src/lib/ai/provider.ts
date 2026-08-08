@@ -5,6 +5,7 @@ import {
   visualPromptGenerationPrompt,
   mutationGenerationPrompt,
   wordGenerationPrompt,
+  NameStyle,
 } from "@/lib/ai/prompts";
 
 // AI Provider抽象化レイヤー。
@@ -12,9 +13,10 @@ import {
 // 将来OpenAI/Gemini等に差し替える場合はこのファイルの実装のみを変更すればよい。
 
 export async function generateConcepts(
-  selection: SelectionMap
+  selection: SelectionMap,
+  nameStyle: NameStyle = "international"
 ): Promise<CharacterConcept[]> {
-  const prompt = conceptGenerationPrompt(selection);
+  const prompt = conceptGenerationPrompt(selection, nameStyle);
   const raw = await callClaude(prompt);
   return parseJsonFromModelOutput<CharacterConcept[]>(raw);
 }

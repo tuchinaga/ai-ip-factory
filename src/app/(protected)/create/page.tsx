@@ -9,6 +9,7 @@ import {
   SelectionMap,
   WordItem,
 } from "@/lib/types";
+import { NameStyle } from "@/lib/ai/prompts";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function CreatePage() {
   const [concepts, setConcepts] = useState<CharacterConcept[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
+  const [nameStyle, setNameStyle] = useState<NameStyle>("international");
 
   useEffect(() => {
     fetch("/api/words")
@@ -67,7 +69,7 @@ export default function CreatePage() {
       const res = await fetch("/api/concepts/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selection }),
+        body: JSON.stringify({ selection, nameStyle }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -159,7 +161,27 @@ export default function CreatePage() {
       )}
 
       {hasSelection && (
-        <div className="flex justify-center mb-10">
+        <div className="flex flex-col items-center gap-3 mb-10">
+          <div className="flex items-center gap-1 rounded-full border border-ink/15 p-1">
+            <button
+              onClick={() => setNameStyle("international")}
+              className={`text-xs font-medium rounded-full px-3 py-1.5 transition ${
+                nameStyle === "international"
+                  ? "bg-ink text-paper"
+                  : "text-ink/50"
+              }`}
+            >
+              国際的な名前
+            </button>
+            <button
+              onClick={() => setNameStyle("japanese")}
+              className={`text-xs font-medium rounded-full px-3 py-1.5 transition ${
+                nameStyle === "japanese" ? "bg-ink text-paper" : "text-ink/50"
+              }`}
+            >
+              日本語の名前
+            </button>
+          </div>
           <button
             onClick={handleGenerateConcepts}
             disabled={loadingConcepts}
