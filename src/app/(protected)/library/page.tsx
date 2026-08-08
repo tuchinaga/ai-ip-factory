@@ -23,7 +23,7 @@ export default function LibraryPage() {
     const params = new URLSearchParams();
     if (status !== "ALL") params.set("status", status);
     if (q) params.set("q", q);
-    const res = await fetch(`/api/seeds?${params.toString()}`);
+    const res = await fetch(`/api/seeds?${params.toString()}`, { cache: "no-store" });
     const data = await res.json();
     setSeeds(data.seeds ?? []);
     setLoading(false);

@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -27,7 +28,10 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ seeds: data });
+  return NextResponse.json(
+    { seeds: data },
+    { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
+  );
 }
 
 // POST 新規Character Seed作成(コンセプト選択 or Mutation選択の両方で使用)

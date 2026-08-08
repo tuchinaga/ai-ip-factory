@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -26,9 +27,18 @@ export async function GET(
     .from("character_seeds")
     .select("*, character_images(*)")
     .eq("id", params.id)
-    .single();
+    .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ seed: data });
+  if (!data) {
+    return NextResponse.json(
+      { error: "指定されたCharacter Seedは見つかりませんでした(既に削除されている可能性があります)" },
+      { status: 404 }
+    );
+  }
+  return NextResponse.json(
+    { seed: data },
+    { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
+  );
 }
 
 // PATCH: 全項目を人間が自由編集可能

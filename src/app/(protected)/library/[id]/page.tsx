@@ -34,10 +34,15 @@ export default function SeedDetailPage() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/seeds/${id}`);
+    const res = await fetch(`/api/seeds/${id}`, { cache: "no-store" });
     const data = await res.json();
+    if (!res.ok || !data.seed) {
+      setNotFound(true);
+      return;
+    }
     setSeed(data.seed);
     setDraft(data.seed);
     setStyle(data.seed?.visual_style || "DEFAULT");
@@ -210,6 +215,19 @@ export default function SeedDetailPage() {
       setError(e instanceof Error ? e.message : "削除に失敗しました");
       setDeleting(false);
     }
+  }
+
+  if (notFound) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <p className="text-sm text-ink/50 mb-4">
+          このCharacter Seedは見つかりませんでした。既に削除されている可能性があります。
+        </p>
+        <Link href="/library" className="text-sm text-accent underline">
+          ← ライブラリへ戻る
+        </Link>
+      </div>
+    );
   }
 
   if (!seed) {

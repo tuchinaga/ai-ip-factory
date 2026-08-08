@@ -29,7 +29,7 @@ export default function CreatePage() {
   const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/words")
+    fetch("/api/words", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         setCategories(data.categories ?? []);

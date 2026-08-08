@@ -19,7 +19,7 @@ export default function WordsPage() {
   const [initialLoading, setInitialLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/words");
+    const res = await fetch("/api/words", { cache: "no-store" });
     const data = await res.json();
     setCategories(data.categories ?? []);
     setWords(data.words ?? []);

@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -19,7 +20,10 @@ export async function GET() {
     .order("word", { ascending: true });
   if (wordErr) return NextResponse.json({ error: wordErr.message }, { status: 500 });
 
-  return NextResponse.json({ categories, words });
+  return NextResponse.json(
+    { categories, words },
+    { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
+  );
 }
 
 // POST: 単語追加 { category_id, word } もしくはカテゴリ追加 { newCategory: { key, label } }
