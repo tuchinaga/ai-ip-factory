@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { APP_VERSION } from "@/lib/version";
 
 const ITEMS = [
   { href: "/create", label: "作成" },
@@ -48,6 +49,7 @@ export function SidebarNav() {
       >
         ログアウト
       </button>
+      <div className="text-[10px] text-ink/25 mt-3">v{APP_VERSION}</div>
     </aside>
   );
 }
