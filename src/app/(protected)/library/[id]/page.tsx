@@ -226,11 +226,11 @@ export default function SeedDetailPage() {
         ← ライブラリ
       </Link>
 
-      <div className="flex items-center justify-between mt-4 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 mb-8">
+        <h1 className="text-3xl font-semibold tracking-tight break-words">
           {draft.name || "無題"}
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {(["KEEP", "MAYBE", "KILL"] as SeedStatus[]).map((s) => (
             <button
               key={s}
@@ -251,7 +251,7 @@ export default function SeedDetailPage() {
           <button
             onClick={handleDeleteSeed}
             disabled={deleting}
-            className="text-xs font-semibold rounded-full px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 transition ml-2"
+            className="text-xs font-semibold rounded-full px-4 py-1.5 border border-red-200 text-red-500 hover:bg-red-50 transition sm:ml-2"
           >
             {deleting && <Spinner className="w-3.5 h-3.5 inline-block mr-1 align-[-2px]" />}
             {deleting ? "削除中..." : "削除"}
