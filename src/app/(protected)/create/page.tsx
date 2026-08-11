@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Category,
   CharacterConcept,
@@ -12,19 +12,23 @@ import {
 import { NameStyle } from "@/lib/ai/prompts";
 import { Spinner } from "@/components/ui/Spinner";
 
+const FREE_INPUT_KEY = "free_input";
+
 export default function CreatePage() {
-  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [words, setWords] = useState<WordItem[]>([]);
   const [selection, setSelection] = useState<SelectionMap>({});
   const [locked, setLocked] = useState<LockMap>({});
   const [combinationId, setCombinationId] = useState<string | null>(null);
+  const [optionalEnabled, setOptionalEnabled] = useState<Record<string, boolean>>({});
+  const [freeInput, setFreeInput] = useState("");
 
   const [loadingShuffle, setLoadingShuffle] = useState(false);
   const [loadingConcepts, setLoadingConcepts] = useState(false);
   const [concepts, setConcepts] = useState<CharacterConcept[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
+  const [savedSeeds, setSavedSeeds] = useState<Record<number, string>>({});
   const [nameStyle, setNameStyle] = useState<NameStyle>("international");
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -38,21 +42,33 @@ export default function CreatePage() {
       .finally(() => setInitialLoading(false));
   }, []);
 
+  const requiredCategories = categories.filter((c) => c.is_required);
+  const optionalCategories = categories.filter((c) => !c.is_required);
+
+  function activeCategoryKeys(): string[] {
+    return [
+      ...requiredCategories.map((c) => c.key),
+      ...optionalCategories.filter((c) => optionalEnabled[c.key]).map((c) => c.key),
+    ];
+  }
+
   async function handleShuffle() {
     setError(null);
     setLoadingShuffle(true);
     setConcepts(null);
+    setSavedSeeds({});
     try {
+      const enabledKeys = activeCategoryKeys();
       const lockedSelection: Partial<SelectionMap> = {};
-      for (const cat of categories) {
-        if (locked[cat.key] && selection[cat.key]) {
-          lockedSelection[cat.key] = selection[cat.key];
+      for (const key of enabledKeys) {
+        if (locked[key] && selection[key]) {
+          lockedSelection[key] = selection[key];
         }
       }
       const res = await fetch("/api/combinations/shuffle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locked: lockedSelection }),
+        body: JSON.stringify({ locked: lockedSelection, enabledKeys }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -65,14 +81,43 @@ export default function CreatePage() {
     }
   }
 
+  function toggleOptional(key: string) {
+    setOptionalEnabled((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      if (!next[key]) {
+        // OFFにしたら選択・ロックも消す
+        setSelection((s) => {
+          const copy = { ...s };
+          delete copy[key];
+          return copy;
+        });
+        setLocked((l) => {
+          const copy = { ...l };
+          delete copy[key];
+          return copy;
+        });
+      }
+      return next;
+    });
+  }
+
+  function buildFullSelection(): SelectionMap {
+    const full = { ...selection };
+    if (freeInput.trim()) {
+      full[FREE_INPUT_KEY] = freeInput.trim();
+    }
+    return full;
+  }
+
   async function handleGenerateConcepts() {
     setError(null);
     setLoadingConcepts(true);
+    setSavedSeeds({});
     try {
       const res = await fetch("/api/concepts/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selection, nameStyle }),
+        body: JSON.stringify({ selection: buildFullSelection(), nameStyle }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -93,7 +138,7 @@ export default function CreatePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: concept.name,
-          source_words: selection,
+          source_words: buildFullSelection(),
           combination_id: combinationId,
           concept: concept.concept,
           personality: concept.personality,
@@ -105,17 +150,19 @@ export default function CreatePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      router.push(`/library/${data.seed.id}`);
+      setSavedSeeds((prev) => ({ ...prev, [index]: data.seed.id }));
     } catch (e) {
       setError(e instanceof Error ? e.message : "保存に失敗しました");
+    } finally {
       setSavingIndex(null);
     }
   }
 
+  const activeKeys = activeCategoryKeys();
   const hasSelection =
     !initialLoading &&
-    categories.length > 0 &&
-    categories.every((c) => !!selection[c.key]);
+    activeKeys.length > 0 &&
+    activeKeys.every((key) => !!selection[key]);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -125,11 +172,12 @@ export default function CreatePage() {
       </p>
       <p className="text-xs text-ink/40 bg-ink/5 rounded-xl px-4 py-3 mb-10 leading-relaxed">
         💡 SHUFFLEでランダムに単語を表示 → 気に入った単語はLOCKして固定 →
-        GENERATE CONCEPTSでAIが3案生成 → 気に入った案をSELECTで保存できます。
+        GENERATE CONCEPTSでAIが3案生成 → 気に入った案を選択で保存できます（複数選択も可）。
+        ITEMなどの任意枠はON/OFFで組み合わせに含めるか選べます。
       </p>
 
       {initialLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           {[0, 1, 2].map((i) => (
             <div key={i} className="card p-5 flex flex-col items-center gap-3 animate-pulse">
               <div className="h-3 w-16 bg-ink/10 rounded" />
@@ -139,29 +187,92 @@ export default function CreatePage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {categories.map((cat) => (
-            <div key={cat.id} className="card p-5 flex flex-col items-center gap-3">
-              <span className="label">{cat.label}</span>
-              <span className="text-xl font-semibold text-center min-h-[1.75rem]">
-                {selection[cat.key] || "—"}
-              </span>
-              <button
-                onClick={() =>
-                  setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
-                }
-                className={`text-xs rounded-full px-3 py-1 border transition ${
-                  locked[cat.key]
-                    ? "bg-ink text-paper border-ink"
-                    : "border-ink/20 text-ink/50 hover:border-ink/40"
-                }`}
-                disabled={!selection[cat.key]}
-              >
-                {locked[cat.key] ? "🔒 ロック中" : "ロック"}
-              </button>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            {requiredCategories.map((cat) => (
+              <div key={cat.id} className="card p-5 flex flex-col items-center gap-3">
+                <span className="label">{cat.label}</span>
+                <span className="text-xl font-semibold text-center min-h-[1.75rem]">
+                  {selection[cat.key] || "—"}
+                </span>
+                <button
+                  onClick={() =>
+                    setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
+                  }
+                  className={`text-xs rounded-full px-3 py-1 border transition ${
+                    locked[cat.key]
+                      ? "bg-ink text-paper border-ink"
+                      : "border-ink/20 text-ink/50 hover:border-ink/40"
+                  }`}
+                  disabled={!selection[cat.key]}
+                >
+                  {locked[cat.key] ? "🔒 ロック中" : "ロック"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {optionalCategories.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              {optionalCategories.map((cat) => {
+                const enabled = !!optionalEnabled[cat.key];
+                return (
+                  <div
+                    key={cat.id}
+                    className={`card p-5 flex flex-col items-center gap-3 transition ${
+                      enabled ? "" : "opacity-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="label">{cat.label}</span>
+                      <span className="text-[10px] text-ink/30">(任意)</span>
+                    </div>
+                    <span className="text-xl font-semibold text-center min-h-[1.75rem]">
+                      {enabled ? selection[cat.key] || "—" : "OFF"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleOptional(cat.key)}
+                        className={`text-xs rounded-full px-3 py-1 border transition ${
+                          enabled
+                            ? "bg-ink text-paper border-ink"
+                            : "border-ink/20 text-ink/50 hover:border-ink/40"
+                        }`}
+                      >
+                        {enabled ? "ON" : "OFF"}
+                      </button>
+                      {enabled && (
+                        <button
+                          onClick={() =>
+                            setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
+                          }
+                          className={`text-xs rounded-full px-3 py-1 border transition ${
+                            locked[cat.key]
+                              ? "bg-ink text-paper border-ink"
+                              : "border-ink/20 text-ink/50 hover:border-ink/40"
+                          }`}
+                          disabled={!selection[cat.key]}
+                        >
+                          {locked[cat.key] ? "🔒" : "ロック"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          )}
+
+          <div className="card p-5 mb-8">
+            <label className="label mb-2 block">自由入力 (任意)</label>
+            <input
+              className="input"
+              placeholder="例: 傘、宇宙船、指輪 など、単語DBにない要素を自由に追加できます"
+              value={freeInput}
+              onChange={(e) => setFreeInput(e.target.value)}
+            />
+          </div>
+        </>
       )}
 
       <div className="flex justify-center mb-10">
@@ -226,28 +337,45 @@ export default function CreatePage() {
       )}
 
       {concepts && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          {concepts.map((c, i) => (
-            <div key={i} className="card p-5 flex flex-col">
-              <div className="text-xs text-ink/40 mb-1">{`0${i + 1}`}</div>
-              <h3 className="text-lg font-semibold mb-2">{c.name}</h3>
-              <p className="text-sm mb-3">{c.concept}</p>
-              <dl className="text-xs text-ink/60 space-y-1 mb-4">
-                <div><span className="font-medium text-ink/80">性格: </span>{c.personality}</div>
-                <div><span className="font-medium text-ink/80">世界観: </span>{c.world}</div>
-                <div><span className="font-medium text-ink/80">哲学: </span>{c.philosophy}</div>
-              </dl>
-              <button
-                onClick={() => handleSelect(c, i)}
-                disabled={savingIndex !== null}
-                className="btn-secondary mt-auto inline-flex items-center justify-center gap-2"
-              >
-                {savingIndex === i && <Spinner className="w-3.5 h-3.5" />}
-                {savingIndex === i ? "保存中..." : "選択"}
-              </button>
-            </div>
-          ))}
-        </div>
+        <>
+          <p className="text-xs text-ink/40 text-center mb-4">
+            気に入った案はそれぞれ選択して、複数保存できます。
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {concepts.map((c, i) => {
+              const savedId = savedSeeds[i];
+              return (
+                <div key={i} className="card p-5 flex flex-col">
+                  <div className="text-xs text-ink/40 mb-1">{`0${i + 1}`}</div>
+                  <h3 className="text-lg font-semibold mb-2">{c.name}</h3>
+                  <p className="text-sm mb-3">{c.concept}</p>
+                  <dl className="text-xs text-ink/60 space-y-1 mb-4">
+                    <div><span className="font-medium text-ink/80">性格: </span>{c.personality}</div>
+                    <div><span className="font-medium text-ink/80">世界観: </span>{c.world}</div>
+                    <div><span className="font-medium text-ink/80">哲学: </span>{c.philosophy}</div>
+                  </dl>
+                  {savedId ? (
+                    <Link
+                      href={`/library/${savedId}`}
+                      className="btn-secondary mt-auto text-center bg-green-50 border-green-200 text-green-700"
+                    >
+                      保存済み ✓ 詳細を見る
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleSelect(c, i)}
+                      disabled={savingIndex === i}
+                      className="btn-secondary mt-auto inline-flex items-center justify-center gap-2"
+                    >
+                      {savingIndex === i && <Spinner className="w-3.5 h-3.5" />}
+                      {savingIndex === i ? "保存中..." : "選択"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

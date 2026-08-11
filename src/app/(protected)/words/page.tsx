@@ -9,7 +9,7 @@ export default function WordsPage() {
   const [words, setWords] = useState<WordItem[]>([]);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [newWord, setNewWord] = useState("");
-  const [newCategory, setNewCategory] = useState({ key: "", label: "" });
+  const [newCategory, setNewCategory] = useState({ key: "", label: "", isRequired: true });
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -117,15 +117,29 @@ export default function WordsPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        newCategory: { key: newCategory.key.trim(), label: newCategory.label.trim() },
+        newCategory: {
+          key: newCategory.key.trim(),
+          label: newCategory.label.trim(),
+          is_required: newCategory.isRequired,
+        },
       }),
     });
-    setNewCategory({ key: "", label: "" });
+    setNewCategory({ key: "", label: "", isRequired: true });
     setShowNewCategory(false);
     load();
   }
 
+  async function handleToggleRequired(cat: Category) {
+    await fetch(`/api/categories/${cat.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_required: !cat.is_required }),
+    });
+    load();
+  }
+
   const activeWords = words.filter((w) => w.category_id === activeCat);
+  const activeCategory = categories.find((c) => c.id === activeCat) ?? null;
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -134,7 +148,7 @@ export default function WordsPage() {
         💡 カテゴリタブを選んでから単語を追加・無効化・削除できます。「AIで単語を提案」から候補をまとめて追加することもできます。
       </p>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-2">
         {categories.map((cat) => (
           <button
             key={cat.id}
@@ -151,6 +165,7 @@ export default function WordsPage() {
             }`}
           >
             {cat.label}
+            {!cat.is_required && <span className="ml-1 opacity-60">(任意)</span>}
           </button>
         ))}
         <button
@@ -161,21 +176,45 @@ export default function WordsPage() {
         </button>
       </div>
 
+      {activeCategory && (
+        <div className="mb-6">
+          <button
+            onClick={() => handleToggleRequired(activeCategory)}
+            className="text-[11px] text-ink/40 hover:text-ink/70 underline"
+          >
+            このカテゴリを{activeCategory.is_required ? "任意枠にする" : "必須枠にする"}
+            （現在: {activeCategory.is_required ? "必須" : "任意（作成画面でON/OFF可能）"}）
+          </button>
+        </div>
+      )}
+
       {showNewCategory && (
-        <div className="card p-4 mb-6 flex gap-2">
-          <input
-            className="input"
-            placeholder="key (例: place)"
-            value={newCategory.key}
-            onChange={(e) => setNewCategory((c) => ({ ...c, key: e.target.value }))}
-          />
-          <input
-            className="input"
-            placeholder="表示名 (例: 場所)"
-            value={newCategory.label}
-            onChange={(e) => setNewCategory((c) => ({ ...c, label: e.target.value }))}
-          />
-          <button onClick={handleAddCategory} className="btn-secondary shrink-0">
+        <div className="card p-4 mb-6 space-y-2">
+          <div className="flex gap-2">
+            <input
+              className="input"
+              placeholder="key (例: place)"
+              value={newCategory.key}
+              onChange={(e) => setNewCategory((c) => ({ ...c, key: e.target.value }))}
+            />
+            <input
+              className="input"
+              placeholder="表示名 (例: 場所)"
+              value={newCategory.label}
+              onChange={(e) => setNewCategory((c) => ({ ...c, label: e.target.value }))}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-xs text-ink/60">
+            <input
+              type="checkbox"
+              checked={!newCategory.isRequired}
+              onChange={(e) =>
+                setNewCategory((c) => ({ ...c, isRequired: !e.target.checked }))
+              }
+            />
+            任意枠にする（作成画面でON/OFFを選べるようになります）
+          </label>
+          <button onClick={handleAddCategory} className="btn-secondary">
             追加
           </button>
         </div>

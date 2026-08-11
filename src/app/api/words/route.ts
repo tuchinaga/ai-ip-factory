@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   if (body.newCategory) {
-    const { key, label } = body.newCategory;
+    const { key, label, is_required } = body.newCategory;
     const { data: existing } = await supabase
       .from("categories")
       .select("sort_order")
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
       .from("categories")
-      .insert({ key, label, sort_order: nextOrder })
+      .insert({ key, label, sort_order: nextOrder, is_required: is_required ?? true })
       .select()
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

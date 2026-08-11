@@ -35,6 +35,15 @@ export default function SeedDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
+
+  function parseTags(text: string): string[] {
+    return text
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/seeds/${id}`, { cache: "no-store" });
@@ -46,6 +55,7 @@ export default function SeedDetailPage() {
     setSeed(data.seed);
     setDraft(data.seed);
     setStyle(data.seed?.visual_style || "DEFAULT");
+    setTags(data.seed?.visual_prompt ? parseTags(data.seed.visual_prompt) : []);
   }, [id]);
 
   useEffect(() => {
@@ -85,6 +95,7 @@ export default function SeedDetailPage() {
       if (!res.ok) throw new Error(data.error);
       setSeed(data.seed);
       setDraft(data.seed);
+      setTags(data.seed?.visual_prompt ? parseTags(data.seed.visual_prompt) : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Visual Prompt生成に失敗しました");
     } finally {
@@ -92,9 +103,36 @@ export default function SeedDetailPage() {
     }
   }
 
+  function commitTags(newTags: string[]) {
+    setTags(newTags);
+    const joined = newTags.join(", ");
+    setDraft((d) => ({ ...d, visual_prompt: joined }));
+    saveField("visual_prompt", joined);
+  }
+
+  function handleRemoveTag(index: number) {
+    commitTags(tags.filter((_, i) => i !== index));
+  }
+
+  function handleMoveTag(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= tags.length) return;
+    const next = [...tags];
+    [next[index], next[target]] = [next[target], next[index]];
+    commitTags(next);
+  }
+
+  function handleAddTag() {
+    const value = newTag.trim();
+    if (!value) return;
+    commitTags([...tags, value]);
+    setNewTag("");
+  }
+
   async function handleCopyPrompt() {
-    if (!seed?.visual_prompt) return;
-    await navigator.clipboard.writeText(seed.visual_prompt);
+    const text = (draft.visual_prompt as string) ?? seed?.visual_prompt;
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
@@ -346,11 +384,75 @@ export default function SeedDetailPage() {
             </button>
             {seed.visual_prompt && (
               <div>
+                <span className="text-[11px] font-medium text-ink/50 block mb-2">
+                  タグ編集(カンマ区切りで分解・並べ替え・追加削除できます)
+                </span>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {tags.map((tag, i) => (
+                    <span
+                      key={`${tag}-${i}`}
+                      className="inline-flex items-center gap-1 text-[11px] bg-ink/5 rounded-full pl-2.5 pr-1 py-1"
+                    >
+                      <span>{tag}</span>
+                      <button
+                        onClick={() => handleMoveTag(i, -1)}
+                        disabled={i === 0}
+                        className="text-ink/30 hover:text-ink/60 disabled:opacity-20 px-0.5"
+                        title="前に移動"
+                      >
+                        ◀
+                      </button>
+                      <button
+                        onClick={() => handleMoveTag(i, 1)}
+                        disabled={i === tags.length - 1}
+                        className="text-ink/30 hover:text-ink/60 disabled:opacity-20 px-0.5"
+                        title="後に移動"
+                      >
+                        ▶
+                      </button>
+                      <button
+                        onClick={() => handleRemoveTag(i)}
+                        className="text-red-400 hover:text-red-600 px-1"
+                        title="削除"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {tags.length === 0 && (
+                    <span className="text-[11px] text-ink/30">タグがありません</span>
+                  )}
+                </div>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    className="input text-xs"
+                    placeholder="タグを追加(例: soft lighting)"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                  />
+                  <button onClick={handleAddTag} className="btn-secondary text-xs px-3 shrink-0">
+                    追加
+                  </button>
+                </div>
+
+                <span className="text-[11px] font-medium text-ink/50 block mb-1">
+                  全文編集
+                </span>
                 <textarea
-                  readOnly
-                  className="input min-h-[120px] text-xs"
-                  value={seed.visual_prompt}
+                  className="input min-h-[100px] text-xs font-mono"
+                  value={(draft.visual_prompt as string) ?? ""}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, visual_prompt: e.target.value }))
+                  }
+                  onBlur={(e) => {
+                    saveField("visual_prompt", e.target.value);
+                    setTags(parseTags(e.target.value));
+                  }}
                 />
+                <p className="text-[11px] text-ink/35 mt-1">
+                  自由に編集できます。フォーカスを外すと自動保存され、上のタグにも反映されます。
+                </p>
                 <button onClick={handleCopyPrompt} className="btn-secondary w-full mt-2">
                   {copied ? "コピーしました" : "プロンプトをコピー"}
                 </button>

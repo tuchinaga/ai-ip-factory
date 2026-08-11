@@ -21,7 +21,8 @@ npm install
 ### 2. Supabaseプロジェクト作成
 1. https://supabase.com でプロジェクトを新規作成
 2. SQL Editorで `supabase/migrations/0001_init.sql` の内容を実行
-3. Storageで `character-images` バケットを作成し、Public読み取りを許可
+3. Storageで `character-images` バケットを作成し、Public読み取りを許可(`0002_storage.sql`でも作成可能)
+4. `supabase/migrations/0003_optional_categories.sql` を実行(カテゴリの必須/任意フラグとITEM枠の追加)
 
 ### 3. 環境変数設定
 `.env.example` を `.env.local` にコピーし、値を埋める。

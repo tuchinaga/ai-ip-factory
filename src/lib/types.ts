@@ -5,6 +5,7 @@ export interface Category {
   key: CategoryKey;
   label: string;
   sort_order: number;
+  is_required: boolean;
 }
 
 export interface WordItem {
