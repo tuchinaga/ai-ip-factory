@@ -81,23 +81,37 @@ export default function CreatePage() {
     }
   }
 
-  function toggleOptional(key: string) {
-    setOptionalEnabled((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      if (!next[key]) {
-        // OFFにしたら選択・ロックも消す
-        setSelection((s) => {
-          const copy = { ...s };
-          delete copy[key];
-          return copy;
-        });
-        setLocked((l) => {
-          const copy = { ...l };
-          delete copy[key];
-          return copy;
-        });
+  function toggleOptional(cat: Category) {
+    const key = cat.key;
+    const isCurrentlyOn = !!optionalEnabled[key];
+
+    if (!isCurrentlyOn) {
+      // ONにする: このカテゴリの有効な単語からすぐに1つ割り当てる
+      const pool = words.filter((w) => w.category_id === cat.id && w.enabled);
+      if (pool.length === 0) {
+        setError(
+          `「${cat.label}」にはまだ単語が登録されていません。「単語」画面から追加してください。`
+        );
+        return;
       }
-      return next;
+      setError(null);
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      setSelection((s) => ({ ...s, [key]: pick.word }));
+      setOptionalEnabled((prev) => ({ ...prev, [key]: true }));
+      return;
+    }
+
+    // OFFにする: 選択・ロックも消す
+    setOptionalEnabled((prev) => ({ ...prev, [key]: false }));
+    setSelection((s) => {
+      const copy = { ...s };
+      delete copy[key];
+      return copy;
+    });
+    setLocked((l) => {
+      const copy = { ...l };
+      delete copy[key];
+      return copy;
     });
   }
 
@@ -232,7 +246,7 @@ export default function CreatePage() {
                     </span>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => toggleOptional(cat.key)}
+                        onClick={() => toggleOptional(cat)}
                         className={`text-xs rounded-full px-3 py-1 border transition ${
                           enabled
                             ? "bg-ink text-paper border-ink"
