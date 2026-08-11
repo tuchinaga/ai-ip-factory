@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CharacterSeed } from "@/lib/types";
 import { LoadingBlock } from "@/components/ui/Spinner";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 interface DashboardData {
   totalCombinations: number;
@@ -84,8 +85,7 @@ export default function DashboardPage() {
             <Link key={seed.id} href={`/library/${seed.id}`} className="card overflow-hidden">
               <div className="aspect-square bg-ink/5 flex items-center justify-center">
                 {main ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={main.image_url} alt={seed.name} className="w-full h-full object-cover" />
+                  <SafeImage src={main.image_url} alt={seed.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-ink/20 text-[10px]">画像なし</span>
                 )}

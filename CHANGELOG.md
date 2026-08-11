@@ -2,6 +2,11 @@
 
 AI IP Factoryの変更履歴。バージョンは `src/lib/version.ts` の `APP_VERSION` と一致させています。
 
+## v1.4.1 (2026-08-08)
+
+- 画像が表示されない問題の切り分けのため、読み込み失敗時に分かりやすいメッセージ(「画像を読み込めませんでした」)を表示する`SafeImage`コンポーネントを導入(Library一覧・Seed詳細・ダッシュボード)
+- **[要対応/DB側の設定]** Supabase Storageの`character-images`バケットが手動作成時にPublicになっていないと、アップロード自体は成功しても画像が表示されないことが判明。`update storage.buckets set public = true where id = 'character-images';`をSupabaseのSQL Editorで実行することを推奨
+
 ## v1.4.0 (2026-08-08)
 
 - 任意カテゴリ(ITEM等)をONにした際、即座にランダムな単語を割り当てる動作をやめ、他の必須枠と同じく「—」表示に統一。SHUFFLEを押したタイミングで他の枠と一緒に単語が割り当てられるように変更

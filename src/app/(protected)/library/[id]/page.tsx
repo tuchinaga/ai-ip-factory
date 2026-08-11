@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CharacterSeed, SeedStatus, VISUAL_STYLES, VisualStyle } from "@/lib/types";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 const TEXT_FIELDS: { key: keyof CharacterSeed; label: string; multiline?: boolean }[] = [
   { key: "name", label: "名前" },
@@ -465,8 +466,7 @@ export default function SeedDetailPage() {
             <div className="grid grid-cols-3 gap-2 mb-3">
               {seed.images?.map((img) => (
                 <div key={img.id} className="relative group">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <SafeImage
                     src={img.image_url}
                     alt=""
                     className={`aspect-square object-cover rounded-lg w-full ${

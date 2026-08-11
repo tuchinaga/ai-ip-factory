@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { CharacterSeed, SeedStatus } from "@/lib/types";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 const FILTERS: (SeedStatus | "ALL")[] = ["ALL", "KEEP", "MAYBE", "KILL"];
 const FILTER_LABELS: Record<SeedStatus | "ALL", string> = {
@@ -103,8 +104,7 @@ export default function LibraryPage() {
                 </button>
                 <div className="aspect-square bg-ink/5 flex items-center justify-center overflow-hidden">
                   {main ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <SafeImage
                       src={main.image_url}
                       alt={seed.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition"
