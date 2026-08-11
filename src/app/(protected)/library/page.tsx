@@ -98,7 +98,7 @@ export default function LibraryPage() {
               >
                 <button
                   onClick={(e) => handleDelete(e, seed)}
-                  className="absolute top-2 right-2 z-10 text-[10px] font-semibold rounded-full px-2 py-1 bg-white/90 text-red-500 opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-50"
+                  className="absolute top-2 right-2 z-10 text-[10px] font-semibold rounded-full px-2 py-1 bg-white/90 text-red-500 opacity-70 md:opacity-0 md:group-hover:opacity-100 transition shadow-sm hover:bg-red-50"
                 >
                   削除
                 </button>

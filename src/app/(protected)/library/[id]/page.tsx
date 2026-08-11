@@ -463,7 +463,7 @@ export default function SeedDetailPage() {
 
           <div className="card p-5">
             <span className="label mb-3 block">キャラクター画像</span>
-            <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
               {seed.images?.map((img) => (
                 <div key={img.id} className="relative group">
                   <SafeImage
@@ -473,7 +473,8 @@ export default function SeedDetailPage() {
                       img.is_main ? "ring-2 ring-accent" : ""
                     }`}
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded-lg flex flex-col items-center justify-center gap-1">
+                  {/* デスクトップ: ホバーで全面オーバーレイ表示 */}
+                  <div className="hidden md:flex absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded-lg flex-col items-center justify-center gap-1">
                     {!img.is_main && (
                       <button
                         onClick={() => handleSetMain(img.id)}
@@ -485,6 +486,23 @@ export default function SeedDetailPage() {
                     <button
                       onClick={() => handleDeleteImage(img.id)}
                       className="text-[10px] text-white/80 underline"
+                    >
+                      削除
+                    </button>
+                  </div>
+                  {/* モバイル: 画像下部に常設の操作バー(ホバー操作ができないため) */}
+                  <div className="md:hidden absolute bottom-0 inset-x-0 bg-black/60 rounded-b-lg flex items-center justify-center gap-2 py-1">
+                    {!img.is_main && (
+                      <button
+                        onClick={() => handleSetMain(img.id)}
+                        className="text-[9px] text-white underline"
+                      >
+                        メインに設定
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteImage(img.id)}
+                      className="text-[9px] text-white/80 underline"
                     >
                       削除
                     </button>

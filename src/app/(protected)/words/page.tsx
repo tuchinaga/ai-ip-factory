@@ -190,7 +190,7 @@ export default function WordsPage() {
 
       {showNewCategory && (
         <div className="card p-4 mb-6 space-y-2">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               className="input"
               placeholder="key (例: place)"
@@ -234,7 +234,7 @@ export default function WordsPage() {
       </div>
 
       <div className="card p-4 mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <span className="label">AIで単語を提案</span>
           <button
             onClick={handleGenerateSuggestions}
