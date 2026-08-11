@@ -86,7 +86,8 @@ export default function CreatePage() {
     const isCurrentlyOn = !!optionalEnabled[key];
 
     if (!isCurrentlyOn) {
-      // ONにする: このカテゴリの有効な単語からすぐに1つ割り当てる
+      // ONにする: 単語が1件も無ければ警告のみ表示し、値は空(—)のまま。
+      // 実際の単語はSHUFFLEを押した時に他の枠と同じタイミングで割り当てられる。
       const pool = words.filter((w) => w.category_id === cat.id && w.enabled);
       if (pool.length === 0) {
         setError(
@@ -95,8 +96,6 @@ export default function CreatePage() {
         return;
       }
       setError(null);
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      setSelection((s) => ({ ...s, [key]: pick.word }));
       setOptionalEnabled((prev) => ({ ...prev, [key]: true }));
       return;
     }
@@ -202,7 +201,7 @@ export default function CreatePage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {requiredCategories.map((cat) => (
               <div key={cat.id} className="card p-5 flex flex-col items-center gap-3">
                 <span className="label">{cat.label}</span>
@@ -224,58 +223,71 @@ export default function CreatePage() {
                 </button>
               </div>
             ))}
-          </div>
 
-          {optionalCategories.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              {optionalCategories.map((cat) => {
-                const enabled = !!optionalEnabled[cat.key];
-                return (
-                  <div
-                    key={cat.id}
-                    className={`card p-5 flex flex-col items-center gap-3 transition ${
-                      enabled ? "" : "opacity-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="label">{cat.label}</span>
-                      <span className="text-[10px] text-ink/30">(任意)</span>
-                    </div>
-                    <span className="text-xl font-semibold text-center min-h-[1.75rem]">
-                      {enabled ? selection[cat.key] || "—" : "OFF"}
-                    </span>
-                    <div className="flex items-center gap-2">
+            {optionalCategories.map((cat) => {
+              const enabled = !!optionalEnabled[cat.key];
+              return (
+                <div
+                  key={cat.id}
+                  className={`card p-5 flex flex-col items-center gap-3 transition ${
+                    enabled ? "" : "opacity-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="label">{cat.label}</span>
+                    <span className="text-[10px] text-ink/30">(任意)</span>
+                  </div>
+                  <span className="text-xl font-semibold text-center min-h-[1.75rem]">
+                    {enabled ? selection[cat.key] || "—" : "OFF"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleOptional(cat)}
+                      className={`text-xs rounded-full px-3 py-1 border transition ${
+                        enabled
+                          ? "bg-ink text-paper border-ink"
+                          : "border-ink/20 text-ink/50 hover:border-ink/40"
+                      }`}
+                    >
+                      {enabled ? "ON" : "OFF"}
+                    </button>
+                    {enabled && (
                       <button
-                        onClick={() => toggleOptional(cat)}
+                        onClick={() =>
+                          setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
+                        }
                         className={`text-xs rounded-full px-3 py-1 border transition ${
-                          enabled
+                          locked[cat.key]
                             ? "bg-ink text-paper border-ink"
                             : "border-ink/20 text-ink/50 hover:border-ink/40"
                         }`}
+                        disabled={!selection[cat.key]}
                       >
-                        {enabled ? "ON" : "OFF"}
+                        {locked[cat.key] ? "🔒" : "ロック"}
                       </button>
-                      {enabled && (
-                        <button
-                          onClick={() =>
-                            setLocked((prev) => ({ ...prev, [cat.key]: !prev[cat.key] }))
-                          }
-                          className={`text-xs rounded-full px-3 py-1 border transition ${
-                            locked[cat.key]
-                              ? "bg-ink text-paper border-ink"
-                              : "border-ink/20 text-ink/50 hover:border-ink/40"
-                          }`}
-                          disabled={!selection[cat.key]}
-                        >
-                          {locked[cat.key] ? "🔒" : "ロック"}
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+              );
+            })}
+
+            {Array.from({
+              length: (() => {
+                const total = categories.length;
+                const remainder = total % 3;
+                return remainder === 0 ? 0 : 3 - remainder;
+              })(),
+            }).map((_, i) => (
+              <Link
+                key={`pad-${i}`}
+                href="/words"
+                className="card p-5 flex flex-col items-center justify-center gap-1 border-dashed text-ink/30 hover:text-ink/50 hover:border-ink/30 transition min-h-[124px]"
+              >
+                <span className="text-2xl leading-none">+</span>
+                <span className="text-[11px]">カテゴリを追加</span>
+              </Link>
+            ))}
+          </div>
 
           <div className="card p-5 mb-8">
             <label className="label mb-2 block">自由入力 (任意)</label>
