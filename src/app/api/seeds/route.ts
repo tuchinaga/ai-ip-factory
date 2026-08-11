@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("character_seeds")
-    .select("*, character_images(*)")
+    .select("*, images:character_images(*)")
     .order("created_at", { ascending: false });
 
   if (status && status !== "ALL") {

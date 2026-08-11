@@ -25,7 +25,7 @@ export async function GET(
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("character_seeds")
-    .select("*, character_images(*)")
+    .select("*, images:character_images(*)")
     .eq("id", params.id)
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -2,6 +2,10 @@
 
 AI IP Factoryの変更履歴。バージョンは `src/lib/version.ts` の `APP_VERSION` と一致させています。
 
+## v1.4.2 (2026-08-08)
+
+- **[根本原因の修正]** 画像がどのページでも一切表示されなかった真因が判明・修正。Supabaseへの問い合わせで`character_seeds`に`character_images`を結合する際、結果のキー名が`character_images`になるところ、フロント側は`images`というキー名で参照していたため常に空として扱われていた(データベース自体は正しくアップロード・紐付けされていた)。`select("*, images:character_images(*)")`のようにエイリアスを付けて解決(seeds一覧・seed詳細・dashboardの3箇所)
+
 ## v1.4.1 (2026-08-08)
 
 - 画像が表示されない問題の切り分けのため、読み込み失敗時に分かりやすいメッセージ(「画像を読み込めませんでした」)を表示する`SafeImage`コンポーネントを導入(Library一覧・Seed詳細・ダッシュボード)

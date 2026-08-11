@@ -24,7 +24,7 @@ export async function GET() {
       .eq("status", "KILL"),
     supabase
       .from("character_seeds")
-      .select("*, character_images(*)")
+      .select("*, images:character_images(*)")
       .order("created_at", { ascending: false })
       .limit(6),
   ]);
